@@ -27,7 +27,7 @@ app.get("/getvideo", async (req, res) => {
   }
 
   if (filePath)
-    res.sendFile(filePath);
+    res.download(filePath);
   else
     res.sendStatus(500);
 
@@ -63,7 +63,7 @@ app.get("/getaudio", async (req, res) => {
   }
 
   if (filePath)
-    res.sendFile(filePath);
+    res.download(filePath);
   else
     res.sendStatus(500);
 
@@ -78,8 +78,10 @@ app.get("/getaudio", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Home");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+app.use(express.static("public"));
 
 // cleans the downloads folder
 child_process.exec("rm -r downloads; mkdir downloads", (err, stdout, stderr) => {

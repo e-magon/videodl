@@ -1,0 +1,57 @@
+body {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.info_text {
+  margin: 3rem 0.2rem 2rem;
+}
+
+input[type=text] {
+    margin: 1rem;
+    padding: 0.2rem;
+    width: 75%;
+    max-width: 40rem;
+
+    font-size: 1rem;
+    font-family: inherit;
+
+    border-color: gray;
+    border-style: solid;
+    border-width: 1px;
+}
+
+.choices_div {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  width: 80vw;
+  margin: 2rem auto;
+}
+
+.choice {
+  margin: auto 3rem;
+}
+
+.button_div {
+  margin: 6rem auto auto;
+}
+
+button {
+  font-size: 2rem;
+  font-family: inherit;
+}
+
+.github_div {
+  position: fixed;
+  right: 1rem;
+  bottom: 0.5rem;
+
+  font-size: 1rem;
+  text-decoration: underline;
+}
+
+a {
+  color: gray;
+}
