@@ -77,6 +77,31 @@ app.get("/getaudio", async (req, res) => {
   });
 });
 
+// /getname?url=... (the param is uri encoded)
+// return the filename of the requested file, without downloading it
+app.get("/getname", async (req, res) => {
+  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, '');
+  let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  logString(`requested NAME from ${clientIp} :\t${videoUrl}`);
+
+  let fileName;
+  try {
+    fileName = await getVideoName(videoUrl);
+  } catch (ex) {
+    logString("\tERR: " + ex + " for " + clientIp);
+    if (ex == "ERROR: Video unavailable")
+      res.sendStatus(404);
+    else
+      res.sendStatus(500);
+    return;
+  }
+
+  if (fileName)
+    res.send(fileName);
+  else
+    res.sendStatus(204); // No content
+})
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -152,6 +177,24 @@ async function downloadAudio(videoUrl) {
   });
 }
 
+async function getVideoName(videoUrl) {
+  return new Promise((resolve, reject) => {
+    child_process.exec(`youtube-dl -e "${videoUrl}"`, (err, stdout, stderr) => {
+      if (stderr) {
+        reject(stderr.replace("\n", ""));
+        return;
+      }
+
+      if (err) {
+        //console.log(err);
+        reject(err);
+        return;
+      }
+
+      resolve(stdout);
+    });
+  });
+}
 
 function logString(msg) {
   let d = new Date();
