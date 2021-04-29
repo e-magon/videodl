@@ -7,6 +7,23 @@ const express = require("express");
 const app = express();
 const PORT = 8093;
 
+// /isvalid?url=... (the param is uri encoded)
+// return 200 if is a valid youtube-dl url, 404 if youtube-dl can't find the video, 500 otherwise
+app.get("/isvalid", async (req, res) => {
+  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, '');
+  let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  let result;
+
+  try {
+    result = await checkValidUrl(videoUrl);
+    res.sendStatus(result);
+  } catch (ex) {
+    logString("\tERR: " + ex + " for " + clientIp);
+    res.sendStatus(500);
+    return;
+  }
+});
+
 // /getvideo?url=... (the param is uri encoded)
 // return the requested video (mp4)
 app.get("/getvideo", async (req, res) => {
@@ -77,31 +94,6 @@ app.get("/getaudio", async (req, res) => {
   });
 });
 
-// /getname?url=... (the param is uri encoded)
-// return the filename of the requested file, without downloading it
-app.get("/getname", async (req, res) => {
-  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, '');
-  let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  logString(`requested NAME from ${clientIp} :\t${videoUrl}`);
-
-  let fileName;
-  try {
-    fileName = await getVideoName(videoUrl);
-  } catch (ex) {
-    logString("\tERR: " + ex + " for " + clientIp);
-    if (ex == "ERROR: Video unavailable")
-      res.sendStatus(404);
-    else
-      res.sendStatus(500);
-    return;
-  }
-
-  if (fileName)
-    res.send(fileName);
-  else
-    res.sendStatus(204); // No content
-})
-
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -119,12 +111,38 @@ child_process.exec("rm -r downloads; mkdir downloads", (err, stdout, stderr) => 
     return;
   }
 
-  app.listen(PORT);
+  console.log();
+  app.listen(PORT, () => {
+    logString("Listening on", PORT);
+  }).on("error", () => {
+    app.listen(PORT + 1);
+    logString("Port", PORT, "already in use, listening on", PORT + 1);
+  });
+
   // test:
   // console.log(encodeURIComponent("https://www.youtube.com/watch?v=ThAACSvrvdQ"))
 });
 
 // ========== methods ==========
+async function checkValidUrl(videoUrl) {
+  // returns 404 for invalid url, 200 otherwise
+  return new Promise((resolve) => {
+    child_process.exec(`youtube-dl -e "${videoUrl}"`, (err, stdout, stderr) => {
+      if (stderr) {
+        resolve(404);
+        return;
+      }
+
+      if (err) {
+        resolve(404);
+        return;
+      }
+
+      resolve(200);
+    });
+  });
+}
+
 async function downloadVideo(videoUrl) {
   return new Promise((resolve, reject) => {
     child_process.exec(`cd downloads && youtube-dl --format mp4 "${videoUrl}"`, (err, stdout, stderr) => {
@@ -177,28 +195,9 @@ async function downloadAudio(videoUrl) {
   });
 }
 
-async function getVideoName(videoUrl) {
-  return new Promise((resolve, reject) => {
-    child_process.exec(`youtube-dl -e "${videoUrl}"`, (err, stdout, stderr) => {
-      if (stderr) {
-        reject(stderr.replace("\n", ""));
-        return;
-      }
-
-      if (err) {
-        //console.log(err);
-        reject(err);
-        return;
-      }
-
-      resolve(stdout);
-    });
-  });
-}
-
-function logString(msg) {
+function logString(...msgs) {
   let d = new Date();
-  let finalString = `${("" + d.getDate()).padStart(2, "0")}/${(d.getMonth() + 1 + "").padStart(2, "0")}/${d.getFullYear()} ${("" + d.getHours()).padStart(2, "0")}:${("" + d.getMinutes()).padStart(2, "0")}:${("" + d.getSeconds()).padStart(2, "0")} - ${msg}`;
+  let finalString = `${("" + d.getDate()).padStart(2, "0")}/${(d.getMonth() + 1 + "").padStart(2, "0")}/${d.getFullYear()} ${("" + d.getHours()).padStart(2, "0")}:${("" + d.getMinutes()).padStart(2, "0")}:${("" + d.getSeconds()).padStart(2, "0")} - ${msgs.join(" ")}`;
 
   console.log(finalString);
 }

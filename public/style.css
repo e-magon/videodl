@@ -55,3 +55,9 @@ button {
 a {
   color: gray;
 }
+
+#page4, #page5 {
+  color: red;
+  font-size: 1.5rem;
+  margin: 2rem auto;
+}
