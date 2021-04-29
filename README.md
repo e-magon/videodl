@@ -1,6 +1,6 @@
 # VideoDL
 
-<img src="github-images/1.png" height="400"></img>
+<img src="github-images/2.png" height="400"></img>
 
 # 🇮🇹
 
