@@ -1,5 +1,5 @@
 # VideoDL
-🇮🇹
+# 🇮🇹
 
 Applicazione node.js e sito web minimali per scaricare video e audio da una pagina web tramite l'URL.
 
@@ -18,8 +18,7 @@ Dopo aver inserito la password, essa verrà salvata in un cookie e quindi non ve
 ### DA FARE:
 - Fare in modo che il client, invece di salvare la password hashata nel cookie, salvi un token generato dal server, il quale tiene tracca di quali token ha generato e quali sono ancora validi.
 
-
-🇬🇧
+# 🇬🇧
 
 Minimal node.js application & website to download video and audio files from the URL of a internet webpage.
 
