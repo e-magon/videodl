@@ -1,5 +1,18 @@
 "use strict";
 
+// I don't like this way of listening for the enter key
+document.querySelector("#password_text").addEventListener("keyup", function (event) {
+  if (event.key === "Enter") {
+    checkPsw();
+  }
+});
+
+document.querySelector("#video_url_text").addEventListener("keyup", function (event) {
+  if (event.key === "Enter") {
+    startDownload();
+  }
+});
+
 function checkCookie() {
   let savedCookie = document.cookie;
   if (savedCookie && savedCookie.length > 4 && savedCookie.startsWith("psw=")) {
@@ -7,6 +20,7 @@ function checkCookie() {
     checkPsw(savedCookie);
   } else {
     document.querySelector("#page0").style.display = "block";
+    document.querySelector("#password_text").focus();
   }
 }
 
@@ -21,7 +35,7 @@ async function checkPsw(cookie) {
   let psw;
   if (!cookie) {
     document.querySelector("#psw_button").disabled = true;
-    psw = document.querySelector("#password").value;
+    psw = document.querySelector("#password_text").value;
     psw = encodeURIComponent(await sha256(psw));
   } else
     psw = cookie;
@@ -35,15 +49,17 @@ async function checkPsw(cookie) {
 
         document.querySelector("#page0").style.display = "none";
         document.querySelector("#page1").style.display = "block";
+        document.querySelector("#video_url_text").focus();
       } else if (xhttp.status == 401) {
         if (cookie) {
           console.log("wrong cookie");
           document.querySelector("#page0").style.display = "block";
+          document.querySelector("#password_text").focus();
         } else {
           console.log("wrong psw");
-          document.querySelector("#password").classList.add("red");
+          document.querySelector("#password_text").classList.add("red");
           await new Promise(resolve => setTimeout(resolve, 2000));
-          document.querySelector("#password").classList.remove("red");
+          document.querySelector("#password_text").classList.remove("red");
           document.querySelector("#psw_button").disabled = false;
         }
       } else {
@@ -60,7 +76,7 @@ async function checkPsw(cookie) {
 
 function startDownload() {
   console.log("Checking URL...");
-  let url = document.querySelector("#video_url").value;
+  let url = document.querySelector("#video_url_text").value;
   console.log(url);
   if (!url)
     return;

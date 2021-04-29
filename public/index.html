@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>VideoDL</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
   </head>
 
   <body onload="checkCookie()">
@@ -14,7 +13,7 @@
     <div id="page0" style="display: none;">
       <div class="info_text"> Parola d'ordine? </div>
       <div class="input_div">
-        <input type="password" id="password" name="password">
+        <input type="password" id="password_text" name="password" autocorrect="off" autocapitalize="none" autocomplete="off">
       </div>
       <div class="button_div">
         <button id="psw_button" type="button" onclick="checkPsw()"> Continua </button>
@@ -26,7 +25,7 @@
     <div id="page1" style="display: none;">
       <div class="info_text"> Inserisci l'URL del video che vuoi scaricare:</div>
       <div class="input_div">
-        <input type="text" id="video_url" name="video_url">
+        <input type="text" id="video_url_text" name="video_url" autocorrect="off" autocapitalize="none" autocomplete="off">
       </div>
       <div class="choices_div">
         <span class="choice">
@@ -47,9 +46,19 @@
     </div>
     <div id="page2" style="display: none;"> Controllo l'URL... </div>
     <div id="page3" style="display: none;"> Avvio del download... </div>
-    <div id="page4" style="display: none;"> Errore: video non trovato. <br> Controlla che l'URL inserito sia corretto.
+    <div id="page4" style="display: none;">
+      <div>Errore: video non trovato. <br> Controlla che l'URL inserito sia corretto.</div>
+      <div class="button_div">
+        <button type="button" onclick="location.reload()"> Riprova </button>
+      </div>
     </div>
-    <div id="page5" style="display: none;"> Errore del server.<br> Riprova tra qualche minuto. </div>
+    <div id="page5" style="display: none;">
+      <div>Errore del server.<br> Riprova tra qualche minuto. </div>
+      <div class="button_div">
+        <button type="button" onclick="location.reload()"> Riprova </button>
+      </div>
+    </div>
+    <script src="script.js"></script>
   </body>
 
 </html>

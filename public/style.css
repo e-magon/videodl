@@ -2,6 +2,8 @@ body {
   font-family: 'Courier New', Courier, monospace;
   font-size: 1.2rem;
   text-align: center;
+  background-color: rgb(20, 20, 20);
+  color: white;
 }
 
 .info_text {
