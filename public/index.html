@@ -4,29 +4,39 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VideoDL</title>
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
   </head>
 
-  <body>
+  <body onload="checkCookie()">
     <h1>VideoDL</h1>
-    <div id="page1">
-      <div class="info_text">Inserisci l'URL del video che vuoi scaricare:</div>
+    <div id="page0" style="display: none;">
+      <div class="info_text"> Parola d'ordine? </div>
+      <div class="input_div">
+        <input type="password" id="password" name="password">
+      </div>
+      <div class="button_div">
+        <button id="psw_button" type="button" onclick="checkPsw()"> Continua </button>
+      </div>
+    </div>
+    <div id="page1" style="display: none;">
+      <div class="info_text"> Inserisci l'URL del video che vuoi scaricare:</div>
       <div class="input_div">
         <input type="text" id="video_url" name="video_url">
       </div>
       <div class="choices_div">
         <span class="choice">
           <input type="radio" id="videobut" name="type" value="video" checked><br>
-          <label for="videobut">Video</label>
+          <label for="videobut"> Video </label>
         </span>
         <span class="choice">
           <input type="radio" id="audiobut" name="type" value="audio"><br>
-          <label for="audiobut">Audio</label>
+          <label for="audiobut"> Audio </label>
         </span>
       </div>
       <div class="button_div">
-        <button type="button" onclick="startDownload()">Download</button>
+        <button type="button" onclick="startDownload()"> Download </button>
       </div>
       <div class="github_div">
         <a href="https://github.com/e-magon/videodl"> Github </a>
@@ -34,7 +44,7 @@
     </div>
     <div id="page2" style="display: none;"> Controllo l'URL... </div>
     <div id="page3" style="display: none;"> Avvio del download... </div>
-    <div id="page4" style="display: none;"> Errore: video non trovato.<br> Controlla che l'URL inserito sia corretto.
+    <div id="page4" style="display: none;"> Errore: video non trovato. <br> Controlla che l'URL inserito sia corretto.
     </div>
     <div id="page5" style="display: none;"> Errore del server.<br> Riprova tra qualche minuto. </div>
   </body>

@@ -8,7 +8,7 @@ body {
   margin: 3rem 0.2rem 2rem;
 }
 
-input[type=text] {
+input[type=text], input[type=password] {
     margin: 1rem;
     padding: 0.2rem;
     width: 75%;
@@ -20,6 +20,14 @@ input[type=text] {
     border-color: gray;
     border-style: solid;
     border-width: 1px;
+}
+
+input[type=password] {
+    width: 14rem;
+}
+
+.red {
+  background-color: rgba(255, 70, 70, 0.5);
 }
 
 .choices_div {

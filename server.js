@@ -4,21 +4,40 @@ const child_process = require("child_process");
 const fs = require("fs");
 
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const app = express();
+app.use(cookieParser());
 const PORT = 8093;
+
+// /checkpsw?psw=... (the param is uri encoded, is the SHA256-hashed password)
+// return 200 if correct psw, 401 if it isn't, 500 otherwise
+app.get("/checkpsw", async (req, res) => {
+  let userPsw = decodeURIComponent(req.query.psw);
+
+  try {
+    (await checkPsw(userPsw)) ? res.sendStatus(200) : res.sendStatus(401); //the replace remove all whitespaces and new lines
+  } catch (ex) {
+    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
+    res.sendStatus(500);
+  }
+});
 
 // /isvalid?url=... (the param is uri encoded)
 // return 200 if is a valid youtube-dl url, 404 if youtube-dl can't find the video, 500 otherwise
 app.get("/isvalid", async (req, res) => {
-  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, '');
-  let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
+  let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   let result;
 
   try {
+    if (!await checkPsw(req.cookies.psw)) {
+      res.sendStatus(401);
+      return;
+    }
     result = await checkValidUrl(videoUrl);
     res.sendStatus(result);
   } catch (ex) {
-    logString("\tERR: " + ex + " for " + clientIp);
+    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
     res.sendStatus(500);
     return;
   }
@@ -27,15 +46,19 @@ app.get("/isvalid", async (req, res) => {
 // /getvideo?url=... (the param is uri encoded)
 // return the requested video (mp4)
 app.get("/getvideo", async (req, res) => {
-  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, '');
-  let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
+  let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   logString(`requested VIDEO from ${clientIp} :\t${videoUrl}`);
 
   let filePath;
   try {
+    if (!await checkPsw(req.cookies.psw)) {
+      res.sendStatus(401);
+      return;
+    }
     filePath = await downloadVideo(videoUrl);
   } catch (ex) {
-    logString("\tERR: " + ex + " for " + clientIp);
+    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
     if (ex == "ERROR: Video unavailable")
       res.sendStatus(404);
     else
@@ -61,15 +84,19 @@ app.get("/getvideo", async (req, res) => {
 // /getaudio?url=... (the param is uri encoded)
 // return the requested audio track of the video (mp3)
 app.get("/getaudio", async (req, res) => {
-  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, '');
-  let clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
+  let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   logString(`requested AUDIO from ${clientIp} :\t${videoUrl}`);
 
   let filePath;
   try {
+    if (!await checkPsw(req.cookies.psw)) {
+      res.sendStatus(401);
+      return;
+    }
     filePath = await downloadAudio(videoUrl);
   } catch (ex) {
-    logString("\tERR: " + ex + " for " + clientIp);
+    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
     if (ex == "ERROR: Video unavailable") {
       res.sendStatus(404);
     }
@@ -124,6 +151,15 @@ child_process.exec("rm -r downloads; mkdir downloads", (err, stdout, stderr) => 
 });
 
 // ========== methods ==========
+async function checkPsw(userPsw) {
+  return new Promise((resolve, reject) => {
+    fs.readFile("hashedpassword.txt", "utf-8", (err, data) => {
+      if (err) reject(err);
+      resolve(userPsw == data.replace(/\v|\s/gm, "")); //the replace removes all whitespaces and new lines
+    });
+  });
+}
+
 async function checkValidUrl(videoUrl) {
   // returns 404 for invalid url, 200 otherwise
   return new Promise((resolve) => {
