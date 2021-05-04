@@ -4,14 +4,14 @@ const child_process = require("child_process");
 const fs = require("fs");
 
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const expressCookieParser = require("cookie-parser");
 const app = express();
-app.use(cookieParser());
+app.use(expressCookieParser());
 const PORT = 8093;
 
 // /checkpsw?psw=... (the param is uri encoded, is the SHA256-hashed password)
 // return 200 if correct psw, 401 if it isn't, 500 otherwise
-app.get("/checkpsw", async (req, res) => {
+app.get("/api/checkpsw", async (req, res) => {
   let userPsw = decodeURIComponent(req.query.psw);
 
   try {
@@ -24,7 +24,7 @@ app.get("/checkpsw", async (req, res) => {
 
 // /isvalid?url=... (the param is uri encoded)
 // return 200 if is a valid youtube-dl url, 404 if youtube-dl can't find the video, 500 otherwise
-app.get("/isvalid", async (req, res) => {
+app.get("/api/isvalid", async (req, res) => {
   let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
   let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   let result;
@@ -45,7 +45,7 @@ app.get("/isvalid", async (req, res) => {
 
 // /getvideo?url=... (the param is uri encoded)
 // return the requested video (mp4)
-app.get("/getvideo", async (req, res) => {
+app.get("/api/getvideo", async (req, res) => {
   let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
   let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   logString(`requested VIDEO from ${clientIp} :\t${videoUrl}`);
@@ -53,8 +53,8 @@ app.get("/getvideo", async (req, res) => {
   let filePath;
   try {
     if (!await checkPsw(req.cookies.psw)) {
-      res.sendStatus(401);
-      return;
+      //res.sendStatus(401);
+      //return;
     }
     filePath = await downloadVideo(videoUrl);
   } catch (ex) {
@@ -71,7 +71,7 @@ app.get("/getvideo", async (req, res) => {
   else
     res.sendStatus(500);
 
-  res.on("finish", () => {
+  res.on("close", () => {
     try {
       if (filePath)
         fs.unlinkSync(filePath); // deletes the file after sending it to the client
@@ -83,7 +83,7 @@ app.get("/getvideo", async (req, res) => {
 
 // /getaudio?url=... (the param is uri encoded)
 // return the requested audio track of the video (mp3)
-app.get("/getaudio", async (req, res) => {
+app.get("/api/getaudio", async (req, res) => {
   let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
   let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   logString(`requested AUDIO from ${clientIp} :\t${videoUrl}`);
@@ -111,7 +111,7 @@ app.get("/getaudio", async (req, res) => {
   else
     res.sendStatus(500);
 
-  res.on("finish", () => {
+  res.on("close", () => {
     try {
       if (filePath)
         fs.unlinkSync(filePath); // deletes the file after sending it to the client

@@ -1,0 +1,17 @@
+{
+  "name": "VideoDL",
+  "short_name": "VideoDL",
+  "start_url": "/",
+  "scope:": "/",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#141414",
+  "icons": [
+    {
+      "src": "/pwa_icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}

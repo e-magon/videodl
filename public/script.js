@@ -1,5 +1,15 @@
 "use strict";
 
+// for the pwa
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(res => console.log("service worker registered"))
+      .catch(err => console.log("service worker not registered", err));
+  });
+}
+
 // I don't like this way of listening for the enter key
 document.querySelector("#password_text").addEventListener("keyup", function (event) {
   if (event.key === "Enter") {
@@ -19,7 +29,7 @@ function checkCookie() {
     savedCookie = savedCookie.substring(4);
     checkPsw(savedCookie);
   } else {
-    document.querySelector("#page0").style.display = "block";
+    showPage(0);
     document.querySelector("#password_text").focus();
   }
 }
@@ -46,14 +56,12 @@ async function checkPsw(cookie) {
       if (xhttp.status == 200) {
         console.log("correct psw");
         saveCookie(psw);
-
-        document.querySelector("#page0").style.display = "none";
-        document.querySelector("#page1").style.display = "block";
+        showPage(1);
         document.querySelector("#video_url_text").focus();
       } else if (xhttp.status == 401) {
         if (cookie) {
           console.log("wrong cookie");
-          document.querySelector("#page0").style.display = "block";
+          showPage(0);
           document.querySelector("#password_text").focus();
         } else {
           console.log("wrong psw");
@@ -64,13 +72,12 @@ async function checkPsw(cookie) {
         }
       } else {
         console.log("Server error");
-        document.querySelector("#page0").style.display = "none";
-        document.querySelector("#page5").style.display = "block";
+        showPage(5);
       }
     }
   };
 
-  xhttp.open("get", "checkpsw?psw=" + psw, true);
+  xhttp.open("get", "api/checkpsw?psw=" + psw, true);
   xhttp.send();
 }
 
@@ -81,11 +88,7 @@ function startDownload() {
   if (!url)
     return;
 
-  document.querySelector("#page1").style.display = "none";
-  document.querySelector("#page2").style.display = "block";
-  document.querySelector("#page3").style.display = "none";
-  document.querySelector("#page4").style.display = "none";
-  document.querySelector("#page5").style.display = "none";
+  showPage(2);
 
 
   // check if url is valid
@@ -95,40 +98,30 @@ function startDownload() {
       await new Promise(resolve => setTimeout(resolve, 500)); // prevents page flicker
       if (xhttp.status == 200) {
         console.log("Valid URL. Starting download...");
-        document.querySelector("#page1").style.display = "none";
-        document.querySelector("#page2").style.display = "none";
-        document.querySelector("#page3").style.display = "block";
-        document.querySelector("#page4").style.display = "none";
-        document.querySelector("#page5").style.display = "none";
+        document.querySelector("#restart_button").style.display = "none";
+        showPage(3);
 
         let audioSelected = document.querySelector("#audiobut").checked;
         let link = document.createElement("a");
         if (audioSelected)
-          link.setAttribute("href", "getaudio?url=" + encodeURIComponent(url));
+          link.setAttribute("href", "api/getaudio?url=" + encodeURIComponent(url));
         else
-          link.setAttribute("href", "getvideo?url=" + encodeURIComponent(url));
+          link.setAttribute("href", "api/getvideo?url=" + encodeURIComponent(url));
         link.setAttribute("download", "");
         link.click();
 
         console.log("Download started");
+        setTimeout(() => { document.querySelector("#restart_button").style.display = "inline"; }, 1500);
       } else if (xhttp.status == 404) {
         console.log("URL Not found");
-        document.querySelector("#page1").style.display = "none";
-        document.querySelector("#page2").style.display = "none";
-        document.querySelector("#page3").style.display = "none";
-        document.querySelector("#page4").style.display = "block";
-        document.querySelector("#page5").style.display = "none";
+        showPage(4);
       } else {
         console.log("Server error");
-        document.querySelector("#page1").style.display = "none";
-        document.querySelector("#page2").style.display = "none";
-        document.querySelector("#page3").style.display = "none";
-        document.querySelector("#page4").style.display = "none";
-        document.querySelector("#page5").style.display = "block";
+        showPage(5);
       }
     }
   };
-  xhttp.open("GET", "isvalid?url=" + encodeURIComponent(url), true);
+  xhttp.open("GET", "api/isvalid?url=" + encodeURIComponent(url), true);
   xhttp.send();
 }
 
@@ -145,4 +138,13 @@ async function sha256(inputString) {
   // convert bytes to hex string                  
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
+}
+
+function showPage(num) {
+  let k = 0;
+  let elem;
+  while (elem = document.querySelector("#page" + k)) {
+    elem.style.display = elem.id == "page" + num ? "block" : "none";
+    k++;
+  }
 }
