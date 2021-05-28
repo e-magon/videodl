@@ -23,7 +23,7 @@ Dopo aver inserito la password, essa verrà salvata in un cookie e quindi non ve
 
 # 🇬🇧
 
-Minimal node.js application & website to download video and audio files from the URL of a internet webpage.
+Minimal node.js application & website to download video and audio files from the URL of an internet webpage.
 
 The server requires `youtube-dl` and `ffmpeg` to be installed and the webpage has to be served over HTTPS.
 
