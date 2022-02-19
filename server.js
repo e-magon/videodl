@@ -13,11 +13,12 @@ const PORT = 8093;
 // return 200 if correct psw, 401 if it isn't, 500 otherwise
 app.get("/api/checkpsw", async (req, res) => {
   let userPsw = decodeURIComponent(req.query.psw);
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
   try {
     (await checkPsw(userPsw)) ? res.sendStatus(200) : res.sendStatus(401); //the replace remove all whitespaces and new lines
   } catch (ex) {
-    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
+    logString("\tERR:", ex, "from", clientIp, "(", reqToString(req), ")");
     res.sendStatus(500);
   }
 });
@@ -26,7 +27,7 @@ app.get("/api/checkpsw", async (req, res) => {
 // return 200 if is a valid youtube-dl url, 404 if youtube-dl can't find the video, 500 otherwise
 app.get("/api/isvalid", async (req, res) => {
   let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
-  let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   let result;
 
   try {
@@ -37,7 +38,7 @@ app.get("/api/isvalid", async (req, res) => {
     result = await checkValidUrl(videoUrl);
     res.sendStatus(result);
   } catch (ex) {
-    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
+    logString("\tERR:", ex, "from", clientIp, "(", reqToString(req), ")");
     res.sendStatus(500);
     return;
   }
@@ -47,7 +48,7 @@ app.get("/api/isvalid", async (req, res) => {
 // return the requested video (mp4)
 app.get("/api/getvideo", async (req, res) => {
   let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
-  let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   logString(`requested VIDEO from ${clientIp} :\t${videoUrl}`);
 
   let filePath;
@@ -58,7 +59,7 @@ app.get("/api/getvideo", async (req, res) => {
     }
     filePath = await downloadVideo(videoUrl);
   } catch (ex) {
-    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
+    logString("\tERR:", ex, "from", clientIp, "(", reqToString(req), ")");
     if (ex == "ERROR: Video unavailable")
       res.sendStatus(404);
     else
@@ -85,7 +86,7 @@ app.get("/api/getvideo", async (req, res) => {
 // return the requested audio track of the video (mp3)
 app.get("/api/getaudio", async (req, res) => {
   let videoUrl = decodeURIComponent(req.query.url).replace(/\s/g, "");
-  let clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const clientIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   logString(`requested AUDIO from ${clientIp} :\t${videoUrl}`);
 
   let filePath;
@@ -96,7 +97,7 @@ app.get("/api/getaudio", async (req, res) => {
     }
     filePath = await downloadAudio(videoUrl);
   } catch (ex) {
-    logString("\tERR: ", ex, " for ", clientIp, "(", req, ")");
+    logString("\tERR:", ex, "from", clientIp, "(", reqToString(req), ")");
     if (ex == "ERROR: Video unavailable") {
       res.sendStatus(404);
     }
@@ -236,4 +237,22 @@ function logString(...msgs) {
   let finalString = `${("" + d.getDate()).padStart(2, "0")}/${(d.getMonth() + 1 + "").padStart(2, "0")}/${d.getFullYear()} ${("" + d.getHours()).padStart(2, "0")}:${("" + d.getMinutes()).padStart(2, "0")}:${("" + d.getSeconds()).padStart(2, "0")} - ${msgs.join(" ")}`;
 
   console.log(finalString);
+}
+
+function reqToString(req) {
+  return JSON.stringify({
+    // headers: req.headers,
+    method: req.method,
+    url: req.url,
+    httpVersion: req.httpVersion,
+    body: req.body,
+    // cookies: req.cookies,
+    // path: req.path,
+    // protocol: req.protocol,
+    query: req.query,
+    hostname: req.hostname,
+    ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+    originalUrl: req.originalUrl,
+    params: req.params,
+  }, null, 2);
 }
